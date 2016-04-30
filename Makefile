@@ -1,5 +1,8 @@
 .PHONY: lint publish
 
+demo:
+	node examples/bench-01.js
+
 lint:
 	node node_modules/eslint/bin/eslint.js --no-color index.js examples/
 
