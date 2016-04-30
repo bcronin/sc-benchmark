@@ -2,15 +2,13 @@
 
 const Suite = require('..').Suite;
 
-
-
-const SAMPLE_CONTENT = () => {
+const SAMPLE_CONTENT = (() => {
     let s = '';
     for (let i = 0; i < 1024 * 1024; i++) {
         s += `${i}`;
     }
     return s;
-}();
+})();
 
 function makeNestedObject(c) {
     if (c === 0) {
@@ -21,7 +19,7 @@ function makeNestedObject(c) {
         m[`key${i}`] = makeNestedObject(c - 1);
     }
     return m;
-};
+}
 
 let s = new Suite();
 

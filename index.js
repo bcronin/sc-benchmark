@@ -1,6 +1,6 @@
 'use strict';
 
-const sprintf = require('sprintf-js').sprintf;
+const sprintf   = require('sprintf-js').sprintf;
 const Histogram = require('native-hdr-histogram');
 
 class Test {
@@ -18,21 +18,21 @@ class Test {
     _run(N) {
         let start = null;
         let timer = {
-            N : N,
-            start : () => start = process.hrtime(),
-        }
+            N     : N,
+            start : () => { start = process.hrtime(); },
+        };
 
         start = process.hrtime();
         this._func(N, timer);
         let delta = process.hrtime(start);
 
         // Convert to nanoseconds/op
-        let ns = delta[0]*(1e9/N) + delta[1]/N;
+        let ns = delta[0] * (1e9 / N) + delta[1] / N;
         return ns;
     }
 
     prime() {
-        let ns = this._run(8);
+        let ns = this._run(4);
         let iterations = Math.ceil(1e9 / ns);   // # to run in second
         this._N = Math.ceil(1e6 / ns);          // # to run in a millisecond
         this._K = Math.ceil(iterations / this._N);
@@ -68,14 +68,14 @@ class Test {
         let min = this._min;
         let max = this._max;
         let factor = 1.0;
-        let units = "ns";
+        let units = 'ns';
 
         if (min > 1.5e6) {
-            units = "ms";
-            factor = 1.0/1e6;
+            units = 'ms';
+            factor = 1.0 / 1e6;
         } else if (min > 1.5e3) {
-            units = "us";
-            factor = 1.0/1e3;
+            units = 'us';
+            factor = 1.0 / 1e3;
         }
 
 
@@ -88,7 +88,7 @@ class Test {
         let stddev = this._results.stddev() * factor;
 
         return sprintf(
-            "%20s %9.2f %s/op | %9.2f %9.2f %7.2f %7.2f %7.2f %7.2f %10d",
+            '%20s %9.2f %s/op | %9.2f %9.2f %7.2f %7.2f %7.2f %7.2f %10d',
             this._name,
             p98,
             units,
@@ -112,12 +112,14 @@ class Suite {
         this._tests.push(new Test(name, f));
     }
     run() {
-        console.log(`Priming benchmarks...`);
+        /* eslint-disable no-console */
+
+        console.log('Priming benchmarks...');
         for (let test of this._tests) {
             test.prime();
         }
         for (let i = 0; i < 4; i++) {
-            console.log(`Pass ${i+1}...`);
+            console.log(`Pass ${i + 1}...`);
             console.log(Test.header());
             for (let test of this._tests) {
                 test.run();
@@ -125,8 +127,9 @@ class Suite {
             }
             console.log();
         }
+        /* eslint-enable no-console */
     }
-};
+}
 
 module.exports = {
     Suite : Suite,
