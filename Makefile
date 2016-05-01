@@ -1,9 +1,11 @@
-.PHONY: demo test lint publish
+.PHONY: demo test test-unittest lint publish
 
 demo:
 	node examples/bench-01.js
 
-test: lint
+test: test-unittest lint
+test-unittest:
+	node node_modules/mocha/bin/mocha -c test/unittest.js
 
 lint:
 	node node_modules/eslint/bin/eslint.js --no-color index.js examples/

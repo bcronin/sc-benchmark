@@ -1,10 +1,11 @@
 'use strict';
 
+const async = require('async');
 const sprintf   = require('sprintf-js').sprintf;
 const Histogram = require('native-hdr-histogram');
 
 class Test {
-    constructor(name, f) {
+    constructor(name, f, opts) {
         this._name = name;
         this._func = f;
         this._min = undefined;
@@ -31,10 +32,12 @@ class Test {
         return ns;
     }
 
-    prime() {
-        // Prime the test for at least 50 ms each
-        let threshold = 50 * 1e6;
-        let count = 4;
+    prime(opts) {
+        let durationNanos = opts.testDurationMillis * 1e6;
+
+        // Prime the test for at least the desired time
+        let threshold = opts.primeDurationMillis * 1e6;
+        let count = 2;
         let ns;
         let actual;
         do {
@@ -42,22 +45,30 @@ class Test {
             ns = this._run(count);
             let delta = process.hrtime(start);
             actual = delta[0] * 1e9 + delta[1];
-            count *= 10;
+            if (threshold / actual > 10) {
+                count *= 10;
+            } else {
+                count *= 2;
+            }
         } while (actual < threshold);
 
-        let iterations = Math.ceil(1.5e9 / ns);   // # to run in 1.5 secs
-        this._N = Math.ceil(1e6 / ns);            // # to run in a millisecond
+        // Compute the number of times that we want to run the test, then split
+        // that between K samples of N iterations each.  Ensure each sample is
+        // of at least a millisecond of run time.
+        let iterations = Math.ceil(durationNanos / ns);
+        this._N = Math.ceil(1e6 / ns);    // # to run in a millisecond
         this._K = Math.ceil(iterations / this._N);
     }
 
-    run() {
-        for (let i = 0; i < this._K; i++) {
+    run(opts, done) {
+        async.timesSeries(this._K, (i, next) => {
             let ns = this._run(this._N);
             this._samples += this._N;
             this._min = (this._min < ns) ? this._min : ns;
             this._max = (this._max > ns) ? this._max : ns;
             this._results.record(ns);
-        }
+            process.nextTick(next);
+        }, done);
     }
 
     static header() {
@@ -117,39 +128,103 @@ class Test {
 }
 
 class Suite {
-    constructor() {
+
+    /**
+     * @param opts For internal use only.
+     */
+    constructor(opts) {
         this._tests = [];
+        this._options = {
+            passes              : 5,
+            quiet               : false,
+            testDurationMillis  : 1500,
+            primeDurationMillis : 50,
+        };
+
+        if (opts) {
+            for (let key in opts) {
+                if (typeof this._options[key] === 'undefined') {
+                    throw new Error('Unknown option');
+                }
+            }
+            for (let key in this._options) {
+                if (opts[key] === undefined) {
+                    continue;
+                }
+                if (typeof opts[key] !== typeof this._options[key]) {
+                    throw new Error('Option typeof does not match');
+                }
+                this._options[key] = opts[key];
+            }
+        }
     }
 
     bench(name, f) {
-        this._tests.push(new Test(name, f));
+        this._tests.push(new Test(name, f, this._options));
         return this;
     }
-    run() {
-        /* eslint-disable no-console */
 
-        console.log('Priming benchmarks...');
-        for (let test of this._tests) {
-            test.prime();
-        }
+    run(done) {
+        done = done || function () {};
 
-        for (let i = 0; i < 5; i++) {
-            console.log(`Pass ${i + 1}...`);
-            console.log(Test.header());
-
-            for (let j = 0; j < this._tests.length; j++) {
-                let test = this._tests[j];
-                test.run();
-                console.log(test.row());
-            }
-            console.log();
-        }
-        /* eslint-enable no-console */
-
+        // Run asynchronously so there's less chance of interruption during
+        // tests.
+        async.waterfall([
+            (it) => {
+                this._print('Priming benchmarks...');
+                it();
+            },
+            (it) => async.eachSeries(this._tests, (test, jt) => {
+                test.prime(this._options);
+                process.nextTick(jt);
+            }, it),
+            (it) => async.timesSeries(this._options.passes, (i, jt) => {
+                this._print(`Pass ${i + 1}...`);
+                this._print(Test.header());
+                async.eachSeries(this._tests, (test, kt) => {
+                    test.run(this._options, () => {
+                        this._print(test.row());
+                        process.nextTick(kt);
+                    });
+                }, () => {
+                    this._print();
+                    jt();
+                });
+            }, it),
+        ], done);
         return this;
+    }
+
+    _print() {
+        if (!this._options.quiet) {
+            /* eslint-disable no-console */
+            console.log.apply(console, arguments);
+            /* eslint-enable no-console */
+        }
     }
 }
 
+class Util {
+    static busyWait(ms) {
+        let start = process.hrtime();
+        let delta;
+        do {
+            let t = process.hrtime(start);
+            delta = t[0] * 1e3 + t[1] / 1e6;
+        } while (delta < ms);
+    }
+
+    static testsByName(suite) {
+        let m = {};
+        for (let test of suite._tests) {
+            m[test._name] = test;
+        }
+        return m;
+    }
+}
+
+
 module.exports = {
     Suite : Suite,
+    Util  : Util,
 };
