@@ -32,9 +32,21 @@ class Test {
     }
 
     prime() {
-        let ns = this._run(4);
-        let iterations = Math.ceil(1e9 / ns);   // # to run in second
-        this._N = Math.ceil(1e6 / ns);          // # to run in a millisecond
+        // Prime the test for at least 50 ms each
+        let threshold = 50 * 1e6;
+        let count = 4;
+        let ns;
+        let actual;
+        do {
+            let start = process.hrtime();
+            ns = this._run(count);
+            let delta = process.hrtime(start);
+            actual = delta[0] * 1e9 + delta[1];
+            count *= 10;
+        } while (actual < threshold);
+
+        let iterations = Math.ceil(1.5e9 / ns);   // # to run in 1.5 secs
+        this._N = Math.ceil(1e6 / ns);            // # to run in a millisecond
         this._K = Math.ceil(iterations / this._N);
     }
 
@@ -120,10 +132,13 @@ class Suite {
         for (let test of this._tests) {
             test.prime();
         }
-        for (let i = 0; i < 4; i++) {
+
+        for (let i = 0; i < 5; i++) {
             console.log(`Pass ${i + 1}...`);
             console.log(Test.header());
-            for (let test of this._tests) {
+
+            for (let j = 0; j < this._tests.length; j++) {
+                let test = this._tests[j];
                 test.run();
                 console.log(test.row());
             }
