@@ -49,6 +49,7 @@ class Test {
     }
 
     static header() {
+        /* eslint-disable max-len */
         return sprintf(
             '%32s %15s | %9s %9s %7s %7s %7s %7s %10s\n' +
             '-----------------------------------------------------------------------------------------------------------------',
@@ -62,6 +63,7 @@ class Test {
             'p99',
             'samples'
         );
+        /* eslint-enable max-len */
     }
 
     row() {
