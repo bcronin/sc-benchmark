@@ -17,7 +17,6 @@ npm install --save sc-benchmark
 ```javascript
 const Suite = require('sc-benchmark').Suite;
 
-
 let s = new Suite();
 
 // Add a named benchmark.  Note that the argument `N` passed to the callback

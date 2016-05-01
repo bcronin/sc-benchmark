@@ -110,6 +110,7 @@ class Suite {
 
     bench(name, f) {
         this._tests.push(new Test(name, f));
+        return this;
     }
     run() {
         /* eslint-disable no-console */
@@ -128,6 +129,8 @@ class Suite {
             console.log();
         }
         /* eslint-enable no-console */
+
+        return this;
     }
 }
 
