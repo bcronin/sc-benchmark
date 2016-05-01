@@ -50,8 +50,8 @@ class Test {
 
     static header() {
         return sprintf(
-            '%20s %15s | %9s %9s %7s %7s %7s %7s %10s\n' +
-            '-----------------------------------------------------------------------------------------------------',
+            '%32s %15s | %9s %9s %7s %7s %7s %7s %10s\n' +
+            '-----------------------------------------------------------------------------------------------------------------',
             'benchmark',
             'p98',
             'min',
@@ -78,7 +78,6 @@ class Test {
             factor = 1.0 / 1e3;
         }
 
-
         min *= factor;
         max *= factor;
         let p80 = this._results.percentile(80) * factor;
@@ -88,7 +87,7 @@ class Test {
         let stddev = this._results.stddev() * factor;
 
         return sprintf(
-            '%20s %9.2f %s/op | %9.2f %9.2f %7.2f %7.2f %7.2f %7.2f %10d',
+            '%32s %9.2f %s/op | %9.2f %9.2f %7.2f %7.2f %7.2f %7.2f %10d',
             this._name,
             p98,
             units,
