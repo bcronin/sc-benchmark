@@ -1,6 +1,7 @@
 # sc-benchmark
 
 [![npm version](https://badge.fury.io/js/sc-benchmark.svg)](https://badge.fury.io/js/sc-benchmark)
+[![Circle CI](https://circleci.com/gh/bcronin/sc-benchmark.svg?style=shield)](https://circleci.com/gh/bcronin/sc-benchmark)
 
 A package for benchmarking functions.
 
