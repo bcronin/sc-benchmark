@@ -49,4 +49,7 @@ s.bench('sha1', (N, timer) => {
         shasum.digest('hex');
     }
 });
+
+// Start the benchmarks
+s.run();
 ```
