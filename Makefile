@@ -1,14 +1,15 @@
 .PHONY: demo test test-unittest lint publish build
 
-build: node_modules
+build: node_modules/.build-sentinel
 
-node_modules: package.json
+node_modules/.build-sentinel: package.json
 	npm update
+	touch node_modules/.build-sentinel
 
 demo: build
 	node examples/bench-01.js
 
-test: test-unittest lint
+test: build test-unittest lint
 test-unittest:
 	node node_modules/mocha/bin/mocha -c test/unittest.js
 
