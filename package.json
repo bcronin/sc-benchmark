@@ -1,7 +1,7 @@
 {
   "name": "sc-benchmark",
   "version": "0.1.10",
-  "main": "index.js",
+  "main": "src/suite.js",
   "scripts": {},
   "dependencies": {
     "async": "^2.0.0-rc.3",
@@ -10,6 +10,7 @@
     "sprintf-js": "^1.0.3"
   },
   "devDependencies": {
+    "esdoc": "^0.4.7",
     "eslint": "^2.4.0",
     "eslint-config-airbnb": "^6.2.0",
     "eslint-plugin-react": "^4.2.3",

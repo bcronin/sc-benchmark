@@ -1,4 +1,5 @@
-.PHONY: demo test test-unittest lint publish build
+.PHONY: build run test lint publish doc \
+	test-unittest
 
 build: node_modules/.build-sentinel
 
@@ -6,7 +7,7 @@ node_modules/.build-sentinel: package.json
 	npm update
 	touch node_modules/.build-sentinel
 
-demo: build
+run: build
 	node examples/bench-01.js
 
 test: build test-unittest lint
@@ -18,7 +19,7 @@ lint:
 
 # NOTE: `npm version` automatically creates a git commit and git tag for the
 # incremented version
-publish: build test
+publish: build test doc
 	@if [ $(shell git symbolic-ref --short -q HEAD) = "master" ]; then exit 0; else \
 	echo "Current git branch does not appear to be 'master'. Refusing to publish."; exit 1; \
 	fi
@@ -26,3 +27,6 @@ publish: build test
 	git push
 	git push --tags
 	npm publish
+
+doc:
+	node node_modules/esdoc/out/src/ESDocCLI.js -c esdoc.config.json

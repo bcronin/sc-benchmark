@@ -1,0 +1,6 @@
+{
+  "source": "./src",
+  "destination": "./dist/api-reference",
+  "unexportIdentifier": true,
+  "undocumentIdentifier": false
+}

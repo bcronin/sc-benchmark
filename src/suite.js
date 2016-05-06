@@ -4,6 +4,37 @@ const async = require('async');
 const sprintf   = require('sprintf-js').sprintf;
 const Histogram = require('native-hdr-histogram');
 
+/**
+ * The Timer object is passed to each benchmark with helpers for properly
+ * timing the benchmark.
+ */
+class Timer {
+    constructor(N, start) {
+        this._N = N;
+        this._start = start;
+    }
+
+    /**
+     * Returns the number of iterations to run the code to be benchmarked.
+     *
+     * @return {number} - The number of iterations that the benchmark should run
+     *      the code to be benchmarked.
+     */
+    get N() {
+        return this._N;
+    }
+
+    /**
+     * Starts the timer associated with the benchmark.  The timer starts
+     * automatically at the beginning of each benchmark functions, so this
+     * effectively allows the timing to be restarted after initial setup code
+     * that should not be part of the timing.
+     */
+    start() {
+        this._start();
+    }
+}
+
 class Test {
     constructor(name, f, opts) {
         this._name = name;
@@ -18,10 +49,7 @@ class Test {
 
     _run(N) {
         let start = null;
-        let timer = {
-            N     : N,
-            start : () => { start = process.hrtime(); },
-        };
+        let timer = new Timer(N, () => { start = process.hrtime() });
 
         start = process.hrtime();
         this._func(N, timer);
@@ -133,6 +161,11 @@ class Test {
     }
 }
 
+/**
+ * Suite represents a suite of individual benchmarks.
+ *
+ * This is the primary interface for setting up the benchmarks.
+ */
 class Suite {
 
     /**
@@ -165,11 +198,28 @@ class Suite {
         }
     }
 
+    /**
+     * Adds a named benchmark.
+     *
+     * @param {string} name - Name of the benchmark
+     * @param {function(N:number, timer:Object)} f - Benchmark function. The benchmark
+     *      functions should contain a for loop that runs the code to benchmark
+     *      N times.  The timer Object can optionally be used to defer the start
+     *      of the timing until initialization is done.
+     * @return {void}
+     */
     bench(name, f) {
         this._tests.push(new Test(name, f, this._options));
         return this;
     }
 
+    /**
+     * Starts running the benchmarks.
+     *
+     * @param {function(err:Object)} done - Callback called when the benchmarks
+     *      are complete.
+     * @return {void}
+     */
     run(done) {
         done = done || function () {};
 
@@ -210,6 +260,10 @@ class Suite {
     }
 }
 
+/*
+ * Internal utilities used by the source itself and the unit tests.  No part of
+ * the supported public API.
+ */
 class Util {
     static busyWait(ms) {
         let start = process.hrtime();
