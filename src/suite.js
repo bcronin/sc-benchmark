@@ -102,10 +102,11 @@ class Test {
     static header() {
         /* eslint-disable max-len */
         return sprintf(
-            '%32s %15s | %9s %9s %7s %5s %7s %7s %7s %10s\n' +
-            '-----------------------------------------------------------------------------------------------------------------------',
+            '%32s %15s %5s | %9s %9s %7s %5s %7s %7s %7s %10s\n' +
+            '-----------------------------------------------------------------------------------------------------------------------------',
             'benchmark',
             'p98',
+            'mag',
             'min',
             'max',
             'stddev',
@@ -136,19 +137,21 @@ class Test {
         max *= factor;
         let p80 = this._results.percentile(80) * factor;
         let p95 = this._results.percentile(95) * factor;
-        let p98 = this._results.percentile(99) * factor;
+        let p98 = this._results.percentile(98) * factor;
         let p99 = this._results.percentile(99) * factor;
         let stddev = this._results.stddev() * factor;
         let mean = this._results.mean() * factor;
+        let log = Math.log10(this._results.percentile(98));
 
         // https://en.wikipedia.org/wiki/Coefficient_of_variation
         let coefficientOfVariation = (stddev / mean);
 
         return sprintf(
-            '%32s %9.2f %s/op | %9.2f %9.2f %7.2f %5.2f %7.2f %7.2f %7.2f %10d',
+            '%32s %9.2f %s/op %5.1f | %9.2f %9.2f %7.2f %5.2f %7.2f %7.2f %7.2f %10d',
             this._name,
             p98,
             units,
+            log,
             min,
             max,
             stddev,

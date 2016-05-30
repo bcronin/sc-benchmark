@@ -1,5 +1,5 @@
 .PHONY: build run test lint publish doc \
-	test-unittest
+	test-unittest demo 
 
 build: node_modules/.build-sentinel
 
@@ -7,6 +7,7 @@ node_modules/.build-sentinel: package.json
 	npm update
 	touch node_modules/.build-sentinel
 
+demo: run
 run: build
 	node examples/bench-01.js
 
