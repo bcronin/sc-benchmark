@@ -3,6 +3,7 @@
 const async = require('async');
 const sprintf   = require('sprintf-js').sprintf;
 const Histogram = require('native-hdr-histogram');
+const fs = require('fs');
 
 /**
  * The Timer object is passed to each benchmark with helpers for properly
@@ -182,7 +183,6 @@ class Suite {
             testDurationMillis  : 1500,
             primeDurationMillis : 50,
         };
-
         if (opts) {
             for (let key in opts) {
                 if (typeof this._options[key] === 'undefined') {
@@ -249,7 +249,29 @@ class Suite {
                     this._print();
                     jt();
                 });
-            }, it),
+            }, () => it()),
+            (it) => {
+                if (!fs.existsSync('dist/benchmark-results.json') ||
+                    !fs.existsSync('package.json')) {
+                    it();
+                    return;
+                }
+
+                let baseline = this._tests[0]._results.percentile(80);
+                let pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+                let results = JSON.parse(fs.readFileSync('dist/benchmark-results.json', 'utf8'));
+                for (let i = 0; i < this._tests.length; i++) {
+                    let t = this._tests[i];
+                    let p80 = t._results.percentile(80);
+                    let n = p80 / baseline;
+                    let m = Math.log10(n);
+                    results[t._name] = results[t._name] || {};
+                    results[t._name][pkg.version] = results[t._name][pkg.version] || [];
+                    results[t._name][pkg.version].push(m);
+                }
+                fs.writeFileSync('dist/benchmark-results.json', JSON.stringify(results, null, 4));
+                it();
+            },
         ], done);
         return this;
     }
